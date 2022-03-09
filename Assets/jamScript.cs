@@ -18,7 +18,7 @@ public class jamScript : MonoBehaviour
 
     private KeyCode[] typableKeys =
     {
-        KeyCode.Alpha0, KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3, KeyCode.Alpha4, KeyCode.Alpha5, KeyCode.Alpha6, KeyCode.Alpha7, KeyCode.Alpha8, KeyCode.Alpha9, KeyCode.Backspace
+        KeyCode.Alpha0, KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3, KeyCode.Alpha4, KeyCode.Alpha5, KeyCode.Alpha6, KeyCode.Alpha7, KeyCode.Alpha8, KeyCode.Alpha9, KeyCode.Keypad0, KeyCode.Keypad1, KeyCode.Keypad2, KeyCode.Keypad3, KeyCode.Keypad4, KeyCode.Keypad5, KeyCode.Keypad6, KeyCode.Keypad7, KeyCode.Keypad8, KeyCode.Keypad9, KeyCode.Return, KeyCode.KeypadEnter, KeyCode.Backspace
     };
     private bool focused;
     private int typedDigits;
@@ -94,7 +94,7 @@ public class jamScript : MonoBehaviour
             {
                 buttonisPressed = false;
             }
-            else if (buttonisPressed)
+            else if (buttonisPressed || !inputMode)
             {
                 holdingTime += Time.deltaTime;
                 if (holdingTime > 1f)
@@ -353,7 +353,8 @@ public class jamScript : MonoBehaviour
         {
             if (Input.GetKeyDown(typableKeys[i]))
             {
-                if (i < 10) { handleKey(i); }
+                if (i < 20) { handleKey(i); }
+                else if (i < 22 && inputMode && focused) { StartCoroutine(handleEnter()); }
                 else { handleBack(); }
             }
         }
@@ -363,7 +364,7 @@ public class jamScript : MonoBehaviour
     {
         if (!inputMode || moduleSolved || isAnimating || !focused || typedDigits >= 12) { return; }
         audio.PlaySoundAtTransform("Tick", transform);
-        screenText[4 + typedDigits / 3].text += k.ToString();
+        screenText[4 + typedDigits / 3].text += (k % 10).ToString();
         typedDigits++;
     }
 
@@ -375,23 +376,111 @@ public class jamScript : MonoBehaviour
         typedDigits--;
     }
 
-    /*Twitch plays
+    IEnumerator handleEnter()
+    {
+        toggleButton.OnInteract();
+        yield return null;
+        toggleButton.OnInteractEnded();
+    }
+
     #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"";
+    private readonly string TwitchHelpMessage = @"<!{0} toggle> to press the toggle button, <!{0} reset> to hold and release the toggle button, <!{0} set 123 345 567 789> to type in 123, 345, 567, 789 into the display";
     #pragma warning restore 414
 
     IEnumerator ProcessTwitchCommand(string command)
     {
         command = command.ToLowerInvariant().Trim();
-        Match m = Regex.Match(command, @"^()$");
-        yield return null;
-    }
-    */
+        string[] parameters = command.Split(' ');
+        if (Regex.IsMatch(parameters[0], @"^\s*toggle\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            toggleButton.OnInteract();
+            yield return null;
+            toggleButton.OnInteractEnded();
+        }
+        else if (Regex.IsMatch(parameters[0], @"^\s*reset\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            toggleButton.OnInteract();
+            while (holdingTime <= 1f)
+            {
+                yield return null;
+            }
+            toggleButton.OnInteractEnded();
+        }
+        else if (Regex.IsMatch(parameters[0], @"^\s*set\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            var presses = new List<int>();
+            if (!inputMode) { yield return "sendtochaterror The module's not in submission mode yet. Command ignored."; yield break; }
+            if (parameters.Length > 5)
+            {
+                yield return "sendtochaterror You can only set up to 4 values per command.";
+                yield break;
+            }
+            else if (parameters.Length == 1)
+            {
+                yield return "sendtochaterror There is no value to set.";
+                yield break;
+            }
+            for (int i = 1; i < parameters.Length; i++)
+            {
+                for (int j = 0; j < parameters[i].Length; j++)
+                {
+                    if (parameters[i].Length != 3) { yield return "sendtochaterror You can only set three-digit values at a time."; yield break; }
+                    else if (parameters[i][j] - '0' < 0 || parameters[i][j] - '0' > 9)
+                    {
+                        yield return "sendtochaterror One of the values is invalid."; 
+                        yield break;
+                    }
+                    else
+                    {
+                        presses.Add(parameters[i][j] - '0');
+                    }
+                }
+            }
+            for (int i = 0; i < 12; i++)
+            {
+                handleBack();
+                yield return null;
+            }
+            foreach (int k in presses)
+            {
+                handleKey(k);
+                yield return new WaitForSeconds(0.1f);
+            }
+        }
 
-    /*Force Solve Handler
+    }
+
     IEnumerator TwitchHandleForcedSolve()
     {
-        yield return null;
+        while (!moduleSolved)
+        {
+            if (!inputMode)
+            {
+                toggleButton.OnInteract();
+                yield return null;
+                toggleButton.OnInteractEnded();
+            }
+            else if (!isAnimating)
+            {
+                for (int i = 0; i < 12; i++)
+                {
+                    handleBack();
+                    yield return null;
+                }
+                for (int i = 0; i < outputNumbers.Length; i++)
+                {
+                    for (int j = 0; j < outputNumbers[i].ToString("000").Length; j++)
+                    {
+                        handleKey(outputNumbers[i].ToString("000")[j] - '0');
+                        yield return null;
+                    }
+                }
+                toggleButton.OnInteract();
+                yield return null;
+                toggleButton.OnInteractEnded();
+            }
+            yield return null;
+        }
     }
-    */
+
 }
