@@ -351,10 +351,10 @@ public class jamScript : MonoBehaviour
     {
         for (int i = 0; i < typableKeys.Count(); i++)
         {
-            if (Input.GetKeyDown(typableKeys[i]))
+            if (Input.GetKeyDown(typableKeys[i]) && focused)
             {
                 if (i < 20) { handleKey(i); }
-                else if (i < 22 && inputMode && focused) { StartCoroutine(handleEnter()); }
+                else if (i < 22 && inputMode) { StartCoroutine(handleEnter()); }
                 else { handleBack(); }
             }
         }
@@ -362,7 +362,7 @@ public class jamScript : MonoBehaviour
 
     void handleKey(int k)
     {
-        if (!inputMode || moduleSolved || isAnimating || !focused || typedDigits >= 12) { return; }
+        if (!inputMode || moduleSolved || isAnimating || typedDigits >= 12) { return; }
         audio.PlaySoundAtTransform("Tick", transform);
         screenText[4 + typedDigits / 3].text += (k % 10).ToString();
         typedDigits++;
@@ -370,7 +370,7 @@ public class jamScript : MonoBehaviour
 
     void handleBack()
     {
-        if (!inputMode || moduleSolved || isAnimating || !focused || typedDigits == 0) { return; }
+        if (!inputMode || moduleSolved || isAnimating || typedDigits == 0) { return; }
         audio.PlaySoundAtTransform("Tick", transform);
         screenText[4 + (typedDigits - 1) / 3].text = screenText[4 + (typedDigits - 1) / 3].text.Substring(0, screenText[4 + (typedDigits - 1) / 3].text.Length - 1);
         typedDigits--;
@@ -436,7 +436,7 @@ public class jamScript : MonoBehaviour
                     }
                 }
             }
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < typedDigits; i++)
             {
                 handleBack();
                 yield return null;
@@ -454,15 +454,19 @@ public class jamScript : MonoBehaviour
     {
         while (!moduleSolved)
         {
-            if (!inputMode)
+            if (isAnimating)
+            {
+                yield return null;
+            }
+            else if (!inputMode)
             {
                 toggleButton.OnInteract();
                 yield return null;
                 toggleButton.OnInteractEnded();
             }
-            else if (!isAnimating)
+            else 
             {
-                for (int i = 0; i < 12; i++)
+                while (typedDigits != 0)
                 {
                     handleBack();
                     yield return null;
