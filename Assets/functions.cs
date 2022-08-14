@@ -20,7 +20,7 @@ public class functions : MonoBehaviour
     {
         List<int> factors = new List<int>();
         int max = (int)Math.Sqrt(k);
-        for (int factor = 1; factor <= max; ++factor) 
+        for (int factor = 1; factor < k; ++factor) 
         {
             if (k % factor == 0)
             {
