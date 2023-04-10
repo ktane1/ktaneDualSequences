@@ -384,7 +384,7 @@ public class jamScript : MonoBehaviour
     }
 
     #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"<!{0} toggle> to press the toggle button, <!{0} reset> to hold and release the toggle button, <!{0} set 123 345 567 789> to type in 123, 345, 567, 789 into the display";
+    private readonly string TwitchHelpMessage = @"<!{0} toggle> to press the toggle button, <!{0} reset> to hold and release the toggle button, <!{0} set 123 345 567 789> to clear the display, then type in 123, 345, 567, 789 into the display";
     #pragma warning restore 414
 
     IEnumerator ProcessTwitchCommand(string command)
@@ -399,6 +399,7 @@ public class jamScript : MonoBehaviour
         }
         else if (Regex.IsMatch(parameters[0], @"^\s*reset\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
         {
+            if (inputMode) { yield return "sendtochaterror The module's not in input mode yet. Command ignored."; yield break; }
             toggleButton.OnInteract();
             while (holdingTime <= 1f)
             {
@@ -436,10 +437,10 @@ public class jamScript : MonoBehaviour
                     }
                 }
             }
-            for (int i = 0; i < typedDigits; i++)
+            while (typedDigits != 0)
             {
                 handleBack();
-                yield return null;
+                yield return new WaitForSeconds(0.1f);
             }
             foreach (int k in presses)
             {
