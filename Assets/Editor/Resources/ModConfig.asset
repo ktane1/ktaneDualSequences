@@ -22,6 +22,6 @@ MonoBehaviour:
     Mod ID: dualSequences
 
     Manual Link: https://ktane.timwi.de/HTML/Dual%20Sequences.html'
-  version: v1.2.3
+  version: v1.2.4
   outputFolder: build
   previewImage: {fileID: 2800000, guid: 48e49a3d96e3c634bbe19102d7bd40ca, type: 3}

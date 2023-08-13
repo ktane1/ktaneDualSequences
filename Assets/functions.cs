@@ -20,13 +20,14 @@ public class functions : MonoBehaviour
     {
         List<int> factors = new List<int>();
         int max = (int)Math.Sqrt(k);
-        for (int factor = 1; factor < k; ++factor) 
+        for (int factor = 1; factor < max; ++factor) 
         {
             if (k % factor == 0)
             {
                 factors.Add(factor);
-                if (factor != k / factor) 
+                if (factor != k / factor)
                     factors.Add(k / factor);
+
             }
         }
         return factors;
